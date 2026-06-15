@@ -2,42 +2,41 @@ import asyncio
 import websockets
 import os
 
-clients = {}
+clients = set()
 
-async def handler(ws, path):
+async def handler(ws):
     try:
         nick = await ws.recv()
-        clients[ws] = nick
+        clients.add(ws)
 
-        print(f"{nick} подключился")
+        print(nick, "подключился")
 
-        async for message in ws:
-            print(message)
+        while True:
+            message = await ws.recv()
 
-            dead = []
+            dead = set()
 
             for client in clients:
                 try:
                     await client.send(message)
                 except:
-                    dead.append(client)
+                    dead.add(client)
 
             for d in dead:
-                clients.pop(d, None)
+                clients.discard(d)
 
-    except:
-        pass
+    except Exception as e:
+        print("Ошибка:", e)
 
     finally:
-        if ws in clients:
-            print(f"{clients[ws]} отключился")
-            del clients[ws]
+        clients.discard(ws)
+        print("отключился")
 
 async def main():
-    PORT = int(os.environ.get("PORT", 8765))
+    PORT = int(os.environ.get("PORT", 10000))
 
     async with websockets.serve(handler, "0.0.0.0", PORT):
-        print(f"Сервер запущен на {PORT}")
+        print("Server started", PORT)
         await asyncio.Future()
 
 asyncio.run(main())
