@@ -49,7 +49,9 @@ async def handler(ws):
                     continue
 
                 target = message[6:].strip()
-                
+                if target in ADMINS:
+                    await ws.send("Незя кикать админов! Они тут папочки!")
+                    continue
                 found = False
 
                 for client, client_nick in list(clients.items()):
@@ -64,10 +66,6 @@ async def handler(ws):
 
                         found = True
                         break
-                    elif target in ADMINS:
-                        await client.send(
-                            "Ты ебобо? Ты админ!"
-                        )
 
                 if not found:
                     await ws.send("❌ Пользователь не найден.")
