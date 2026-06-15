@@ -1,14 +1,19 @@
+```python
 import asyncio
 import os
 import websockets
 
 clients = {}  # websocket -> nickname
-ADMINS = {"FireCat"}
+
+ADMINS = {
+    "FireCat"
+}
+
 
 async def broadcast(message):
     dead = []
 
-    for client in clients:
+    for client in list(clients.keys()):
         try:
             await client.send(message)
         except:
@@ -20,8 +25,7 @@ async def broadcast(message):
 
 async def handler(ws):
     try:
-        # получаем ник при подключении
-        nick = await ws.recv()
+        nick = (await ws.recv()).strip()
 
         clients[ws] = nick
 
@@ -29,40 +33,65 @@ async def handler(ws):
 
         await broadcast(f"🔔 {nick} подключился к чату")
 
-        # получаем сообщения
         while True:
-            message = await ws.recv()
+            message = (await ws.recv()).strip()
+
+            # список онлайн
+            if message == "/online":
+                users = ", ".join(clients.values())
+                await ws.send(f"👥 Онлайн: {users}")
+                continue
+
+            # кик
             if message.startswith("/kick "):
-                target = message[6:]
 
-                if clients[ws] in ADMINS:
-
-                    for client, nick in clients.items():
-
-                        if nick == target:
-
-                            await client.send("Вы были отключены администратором.")
-                            await client.close()
-
-                            break
-
+                if nick not in ADMINS:
+                    await ws.send("❌ Нет прав.")
                     continue
-            print(message)
 
-            await broadcast(message)
+                target = message[6:].strip()
+
+                found = False
+
+                for client, client_nick in list(clients.items()):
+
+                    if client_nick == target:
+
+                        await client.send(
+                            "🚫 Вы были отключены администратором."
+                        )
+
+                        await client.close()
+
+                        found = True
+                        break
+
+                if not found:
+                    await ws.send("❌ Пользователь не найден.")
+
+                continue
+
+            formatted = f"[{nick}] {message}"
+
+            print(formatted)
+
+            await broadcast(formatted)
 
     except Exception as e:
         print("Ошибка:", e)
 
     finally:
         if ws in clients:
+
             nick = clients[ws]
 
             del clients[ws]
 
             print(f"{nick} отключился")
 
-            await broadcast(f"🔔 {nick} покинул чат")
+            await broadcast(
+                f"🔔 {nick} покинул чат"
+            )
 
 
 async def main():
@@ -79,3 +108,4 @@ async def main():
 
 
 asyncio.run(main())
+```
