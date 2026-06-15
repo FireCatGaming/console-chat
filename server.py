@@ -44,9 +44,9 @@ async def handler(ws):
                             await client.send("Вы были отключены администратором.")
                             await client.close()
 
-                break
+                            break
 
-    continue
+                    continue
             print(message)
 
             await broadcast(message)
