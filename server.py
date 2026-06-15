@@ -1,12 +1,12 @@
 import asyncio
 import websockets
+import os
 
 clients = {}
 
-async def handler(ws):
+async def handler(ws, path):
     try:
         nick = await ws.recv()
-
         clients[ws] = nick
 
         print(f"{nick} подключился")
@@ -34,8 +34,10 @@ async def handler(ws):
             del clients[ws]
 
 async def main():
-    async with websockets.serve(handler, "0.0.0.0", 8765):
-        print("Сервер запущен на 8765")
+    PORT = int(os.environ.get("PORT", 8765))
+
+    async with websockets.serve(handler, "0.0.0.0", PORT):
+        print(f"Сервер запущен на {PORT}")
         await asyncio.Future()
 
 asyncio.run(main())
