@@ -3,7 +3,7 @@ import os
 import websockets
 
 clients = {}  # websocket -> nickname
-
+ADMINS = {"FireCat"}
 
 async def broadcast(message):
     dead = []
@@ -32,7 +32,21 @@ async def handler(ws):
         # получаем сообщения
         while True:
             message = await ws.recv()
+            if message.startswith("/kick "):
+                target = message[6:]
 
+                if clients[ws] in ADMINS:
+
+                    for client, nick in clients.items():
+
+                        if nick == target:
+
+                            await client.send("Вы были отключены администратором.")
+                            await client.close()
+
+                break
+
+    continue
             print(message)
 
             await broadcast(message)
