@@ -1,4 +1,3 @@
-```python
 import asyncio
 import os
 import websockets
@@ -106,6 +105,4 @@ async def main():
 
         await asyncio.Future()
 
-
 asyncio.run(main())
-```
